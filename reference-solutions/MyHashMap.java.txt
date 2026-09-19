@@ -1,0 +1,107 @@
+package com.allstate.prep.ds;
+
+/** REFERENCE SOLUTION — the mechanism behind "how does HashMap work internally?" */
+public class MyHashMap<K, V> {
+
+    private static final int DEFAULT_CAPACITY = 16;
+    private static final float LOAD_FACTOR = 0.75f;
+
+    private static final class Node<K, V> {
+        final int hash;
+        final K key;
+        V value;
+        Node<K, V> next;
+        Node(int hash, K key, V value, Node<K, V> next) {
+            this.hash = hash; this.key = key; this.value = value; this.next = next;
+        }
+    }
+
+    private Node<K, V>[] table;
+    private int size;
+    private int threshold;
+
+    @SuppressWarnings("unchecked")
+    public MyHashMap() {
+        this.table = new Node[DEFAULT_CAPACITY];
+        this.threshold = (int) (DEFAULT_CAPACITY * LOAD_FACTOR);
+    }
+
+    private int spread(Object key) {
+        if (key == null) return 0;
+        int h = key.hashCode();
+        return (h ^ (h >>> 16)) & 0x7fffffff;
+    }
+
+    private static int indexFor(int hash, int capacity) { return hash & (capacity - 1); }
+
+    private static boolean eq(Object a, Object b) {
+        return a == b || (a != null && a.equals(b));
+    }
+
+    public V put(K key, V value) {
+        int hash = spread(key);
+        int i = indexFor(hash, table.length);
+        for (Node<K, V> n = table[i]; n != null; n = n.next) {
+            if (n.hash == hash && eq(n.key, key)) {
+                V old = n.value;
+                n.value = value;              // overwrite: size must NOT change
+                return old;
+            }
+        }
+        table[i] = new Node<>(hash, key, value, table[i]);
+        if (++size > threshold) resize();
+        return null;
+    }
+
+    public V get(K key) {
+        Node<K, V> n = node(key);
+        return n == null ? null : n.value;
+    }
+
+    public boolean containsKey(K key) { return node(key) != null; }
+
+    private Node<K, V> node(K key) {
+        int hash = spread(key);
+        for (Node<K, V> n = table[indexFor(hash, table.length)]; n != null; n = n.next) {
+            if (n.hash == hash && eq(n.key, key)) return n;
+        }
+        return null;
+    }
+
+    public V remove(K key) {
+        int hash = spread(key);
+        int i = indexFor(hash, table.length);
+        Node<K, V> prev = null;
+        for (Node<K, V> n = table[i]; n != null; prev = n, n = n.next) {
+            if (n.hash == hash && eq(n.key, key)) {
+                if (prev == null) table[i] = n.next; else prev.next = n.next;
+                size--;
+                return n.value;
+            }
+        }
+        return null;
+    }
+
+    public int size() { return size; }
+
+    public int capacity() { return table.length; }
+
+    @SuppressWarnings("unchecked")
+    private void resize() {
+        Node<K, V>[] old = table;
+        int newCapacity = old.length << 1;
+        Node<K, V>[] fresh = new Node[newCapacity];
+        for (Node<K, V> head : old) {
+            Node<K, V> n = head;
+            while (n != null) {
+                Node<K, V> next = n.next;
+                int i = indexFor(n.hash, newCapacity);
+                n.next = fresh[i];
+                fresh[i] = n;
+                n = next;
+            }
+        }
+        this.table = fresh;
+        this.threshold = (int) (newCapacity * LOAD_FACTOR);
+    }
+}

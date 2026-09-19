@@ -1,0 +1,72 @@
+package com.allstate.prep.strings;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/** REFERENCE SOLUTIONS — the reported Allstate string problems. */
+public class StringProblems {
+
+    /**
+     * Sliding window with a last-seen index map. O(n) time, O(min(n, charset)) space.
+     * The key move: when we see a repeat, jump `left` PAST the previous occurrence —
+     * but only if that occurrence is still inside the window (p >= left), otherwise
+     * a stale index would drag the window backwards. "abba" is the test that catches it.
+     */
+    public int lengthOfLongestSubstring(String s) {
+        if (s == null || s.isEmpty()) return 0;
+        Map<Character, Integer> lastSeen = new HashMap<>();
+        int best = 0, left = 0;
+        for (int right = 0; right < s.length(); right++) {
+            char c = s.charAt(right);
+            Integer prev = lastSeen.get(c);
+            if (prev != null && prev >= left) left = prev + 1;
+            lastSeen.put(c, right);
+            best = Math.max(best, right - left + 1);
+        }
+        return best;
+    }
+
+    /** Run-length encode. O(n). A run of 1 stays bare — "a1" is the classic wrong answer. */
+    public String compress(String input) {
+        if (input == null || input.isEmpty()) return "";
+        StringBuilder out = new StringBuilder();
+        int i = 0;
+        while (i < input.length()) {
+            char c = input.charAt(i);
+            int j = i;
+            while (j < input.length() && input.charAt(j) == c) j++;
+            int runLength = j - i;
+            out.append(c);
+            if (runLength > 1) out.append(runLength);   // multi-digit counts just work
+            i = j;
+        }
+        return out.toString();
+    }
+
+    /** trim + split on runs of whitespace collapses the extra spaces for free. */
+    public String reverseWords(String s) {
+        if (s == null) return "";
+        String trimmed = s.trim();
+        if (trimmed.isEmpty()) return "";
+        String[] words = trimmed.split("\\s+");
+        StringBuilder out = new StringBuilder();
+        for (int i = words.length - 1; i >= 0; i--) {
+            out.append(words[i]);
+            if (i > 0) out.append(' ');
+        }
+        return out.toString();
+    }
+
+    /** Two passes: count, then find the first count of 1. O(n). */
+    public int firstUniqueChar(String s) {
+        if (s == null || s.isEmpty()) return -1;
+        Map<Character, Integer> freq = new HashMap<>();
+        for (int i = 0; i < s.length(); i++) {
+            freq.merge(s.charAt(i), 1, Integer::sum);
+        }
+        for (int i = 0; i < s.length(); i++) {
+            if (freq.get(s.charAt(i)) == 1) return i;
+        }
+        return -1;
+    }
+}

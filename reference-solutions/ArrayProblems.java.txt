@@ -1,0 +1,124 @@
+package com.allstate.prep.arrays;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/** REFERENCE SOLUTIONS — the reported Allstate array problems. */
+public class ArrayProblems {
+
+    /**
+     * Modified binary search. O(log n) — this is the "best algorithm" they ask for.
+     * Insight: at any midpoint, AT LEAST ONE half is properly sorted. Identify which,
+     * test whether the target falls inside that half's range, and recurse accordingly.
+     */
+    public int searchRotated(int[] nums, int target) {
+        if (nums == null || nums.length == 0) return -1;
+        int lo = 0, hi = nums.length - 1;
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;            // avoids (lo+hi) overflow
+            if (nums[mid] == target) return mid;
+
+            if (nums[lo] <= nums[mid]) {             // left half is sorted
+                if (target >= nums[lo] && target < nums[mid]) hi = mid - 1;
+                else lo = mid + 1;
+            } else {                                 // right half is sorted
+                if (target > nums[mid] && target <= nums[hi]) lo = mid + 1;
+                else hi = mid - 1;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * The pivot = index of the smallest element = the rotation point.
+     * Compare against nums[hi], not nums[lo]: if nums[mid] > nums[hi] the minimum
+     * must be strictly right of mid, otherwise mid is still a candidate.
+     * Note lo < hi (not <=) — the loop converges on a single surviving index.
+     */
+    public int findPivot(int[] nums) {
+        int lo = 0, hi = nums.length - 1;
+        while (lo < hi) {
+            int mid = lo + (hi - lo) / 2;
+            if (nums[mid] > nums[hi]) lo = mid + 1;
+            else hi = mid;
+        }
+        return lo;
+    }
+
+    /** Sort by start, then sweep extending the current interval. O(n log n) — sort dominates. */
+    public int[][] mergeIntervals(int[][] intervals) {
+        if (intervals == null || intervals.length == 0) return new int[0][];
+
+        int[][] sorted = intervals.clone();
+        Arrays.sort(sorted, Comparator.comparingInt(a -> a[0]));
+
+        List<int[]> merged = new ArrayList<>();
+        int[] current = {sorted[0][0], sorted[0][1]};      // copy: never mutate the input
+        for (int i = 1; i < sorted.length; i++) {
+            if (sorted[i][0] <= current[1]) {              // <= so touching intervals merge
+                current[1] = Math.max(current[1], sorted[i][1]);   // max handles containment
+            } else {
+                merged.add(current);
+                current = new int[]{sorted[i][0], sorted[i][1]};
+            }
+        }
+        merged.add(current);
+        return merged.toArray(new int[0][]);
+    }
+
+    /**
+     * Prefix sum + map of FIRST occurrence index. O(n).
+     * Two things make or break it:
+     *   - seed the map with (0 -> -1) so a subarray starting at index 0 is found
+     *   - putIfAbsent, not put: keeping the EARLIEST index is what makes it the LONGEST
+     */
+    public int maxSubArrayLen(int[] nums, int k) {
+        Map<Integer, Integer> firstIndexOfPrefix = new HashMap<>();
+        firstIndexOfPrefix.put(0, -1);
+        int prefix = 0, best = 0;
+        for (int i = 0; i < nums.length; i++) {
+            prefix += nums[i];
+            Integer start = firstIndexOfPrefix.get(prefix - k);
+            if (start != null) best = Math.max(best, i - start);
+            firstIndexOfPrefix.putIfAbsent(prefix, i);
+        }
+        return best;
+    }
+
+    /** One pass, complement lookup. O(n). Sorted follow-up: two pointers, O(1) space. */
+    public int[] twoSum(int[] nums, int target) {
+        Map<Integer, Integer> seen = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            Integer j = seen.get(target - nums[i]);
+            if (j != null) return new int[]{j, i};
+            seen.put(nums[i], i);
+        }
+        return new int[0];
+    }
+
+    /** Reverse three times: whole, first k, rest. In place, O(1) extra space. */
+    public void rotate(int[] nums, int k) {
+        if (nums == null || nums.length <= 1) return;
+        int n = nums.length;
+        k %= n;                        // k can exceed the length
+        if (k == 0) return;
+        reverse(nums, 0, n - 1);
+        reverse(nums, 0, k - 1);
+        reverse(nums, k, n - 1);
+    }
+
+    private void reverse(int[] a, int i, int j) {
+        while (i < j) {
+            int tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+            i++; j--;
+        }
+    }
+
+    public static List<int[]> asList(int[][] arr) {
+        return List.of(arr);
+    }
+}

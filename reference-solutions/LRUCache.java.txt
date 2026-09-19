@@ -1,0 +1,71 @@
+package com.allstate.prep.ds;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * REFERENCE SOLUTION — HashMap for O(1) lookup + doubly-linked list for O(1) reordering.
+ * Sentinel head/tail nodes remove every null check from the link/unlink code.
+ * Invariant: head.next is the most-recently-used, tail.prev is the LRU (eviction victim).
+ */
+public class LRUCache {
+
+    private static final class Node {
+        int key, value;
+        Node prev, next;
+        Node(int key, int value) { this.key = key; this.value = value; }
+    }
+
+    private final int capacity;
+    private final Map<Integer, Node> index = new HashMap<>();
+    private final Node head = new Node(0, 0);   // sentinel: MRU side
+    private final Node tail = new Node(0, 0);   // sentinel: LRU side
+
+    public LRUCache(int capacity) {
+        this.capacity = capacity;
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    public int get(int key) {
+        Node n = index.get(key);
+        if (n == null) return -1;
+        moveToFront(n);            // a read counts as a use
+        return n.value;
+    }
+
+    public void put(int key, int value) {
+        if (capacity <= 0) return;
+
+        Node existing = index.get(key);
+        if (existing != null) {
+            existing.value = value;
+            moveToFront(existing);  // an update also refreshes recency
+            return;
+        }
+
+        if (index.size() == capacity) {
+            Node lru = tail.prev;
+            unlink(lru);
+            index.remove(lru.key);  // why the Node stores its key: we evict by node
+        }
+
+        Node fresh = new Node(key, value);
+        index.put(key, fresh);
+        linkFront(fresh);
+    }
+
+    private void moveToFront(Node n) { unlink(n); linkFront(n); }
+
+    private void unlink(Node n) {
+        n.prev.next = n.next;
+        n.next.prev = n.prev;
+    }
+
+    private void linkFront(Node n) {
+        n.next = head.next;
+        n.prev = head;
+        head.next.prev = n;
+        head.next = n;
+    }
+}

@@ -1,0 +1,106 @@
+package com.allstate.prep.ds;
+
+/**
+ * REFERENCE SOLUTION — Allstate's signature TDD problem.
+ * Constraint honoured: ZERO use of java.util. Raw arrays and a hand-written Node only.
+ */
+public class MySet<E> {
+
+    private static final int DEFAULT_CAPACITY = 16;
+    private static final float LOAD_FACTOR = 0.75f;
+
+    /** Chaining node — our collision strategy. */
+    private static final class Node<E> {
+        final int hash;
+        final E element;
+        Node<E> next;
+        Node(int hash, E element, Node<E> next) {
+            this.hash = hash; this.element = element; this.next = next;
+        }
+    }
+
+    private Node<E>[] buckets;
+    private int size;
+    private int threshold;
+
+    @SuppressWarnings("unchecked")
+    public MySet() {
+        this.buckets = new Node[DEFAULT_CAPACITY];
+        this.threshold = (int) (DEFAULT_CAPACITY * LOAD_FACTOR);
+    }
+
+    /** Same trick real HashMap uses: mix high bits down, since indexing only sees low bits. */
+    private int spread(Object e) {
+        if (e == null) return 0;                  // null always lands in bucket 0
+        int h = e.hashCode();
+        return (h ^ (h >>> 16)) & 0x7fffffff;     // mask off the sign bit
+    }
+
+    private static int indexFor(int hash, int capacity) {
+        return hash & (capacity - 1);             // power-of-2 capacity => bitmask, not %
+    }
+
+    private static boolean eq(Object a, Object b) {
+        return a == b || (a != null && a.equals(b));   // equals(), never ==
+    }
+
+    public boolean add(E element) {
+        int hash = spread(element);
+        int i = indexFor(hash, buckets.length);
+        for (Node<E> n = buckets[i]; n != null; n = n.next) {
+            if (n.hash == hash && eq(n.element, element)) return false;   // duplicate
+        }
+        buckets[i] = new Node<>(hash, element, buckets[i]);               // prepend, O(1)
+        if (++size > threshold) resize();
+        return true;
+    }
+
+    public boolean contains(E element) {
+        int hash = spread(element);
+        for (Node<E> n = buckets[indexFor(hash, buckets.length)]; n != null; n = n.next) {
+            if (n.hash == hash && eq(n.element, element)) return true;
+        }
+        return false;
+    }
+
+    public boolean remove(E element) {
+        int hash = spread(element);
+        int i = indexFor(hash, buckets.length);
+        Node<E> prev = null;
+        for (Node<E> n = buckets[i]; n != null; prev = n, n = n.next) {
+            if (n.hash == hash && eq(n.element, element)) {
+                if (prev == null) buckets[i] = n.next;   // head of chain
+                else prev.next = n.next;                 // unlink, chain stays intact
+                size--;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int size() { return size; }
+
+    public boolean isEmpty() { return size == 0; }
+
+    @SuppressWarnings("unchecked")
+    private void resize() {
+        Node<E>[] old = buckets;
+        int newCapacity = old.length << 1;
+        Node<E>[] fresh = new Node[newCapacity];
+        for (Node<E> head : old) {
+            Node<E> n = head;
+            while (n != null) {
+                Node<E> next = n.next;
+                int i = indexFor(n.hash, newCapacity);
+                n.next = fresh[i];
+                fresh[i] = n;
+                n = next;
+            }
+        }
+        this.buckets = fresh;
+        this.threshold = (int) (newCapacity * LOAD_FACTOR);
+    }
+
+    /** Not required, but handy in your own tests to prove resize happened. */
+    int capacity() { return buckets.length; }
+}
