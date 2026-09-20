@@ -29,10 +29,14 @@ Overall pipeline ≈ 4 weeks. Reported difficulty **2.6/5** and **79% positive**
 
 ## The 7 days
 
-### Day 1 — Sat 19 Sep · **CORE JAVA** ← you are here
-Full hour-by-hour breakdown in **[DAY1-JAVA.md](DAY1-JAVA.md)**. Headline: build `MySet` and `MyHashMap` by hand with TDD, then run the four demos so collections and concurrency answers come from experience, not memory.
+### Day 1 — Sat 19 Sep · **CORE JAVA**
+Full breakdown in **[DAY1-JAVA.md](DAY1-JAVA.md)**. Headline: build `MySet` and `MyHashMap` by hand with TDD, then run the four demos so collections and concurrency answers come from experience, not memory.
+
+New to TDD? **[GUIDED-TDD.md](GUIDED-TDD.md)** → then **[GUIDED-HASHMAP.md](GUIDED-HASHMAP.md)**.
+Beyond the reported questions, the broader Java syllabus — OOP, exceptions, **JVM memory & GC**, **thread synchronization**, generics, SQL/**BCNF** — is in **[cheatsheets/03-java-study-guide.md](cheatsheets/03-java-study-guide.md)**.
 
 ### Day 2 — Sun 20 Sep · **Spring Boot internals + REST API end-to-end**
+📄 **Full block-by-block plan: [DAY2-SPRINGBOOT.md](DAY2-SPRINGBOOT.md)** · question bank: **[cheatsheets/04-spring-boot-qbank.md](cheatsheets/04-spring-boot-qbank.md)**
 - Build one complete REST resource from scratch, timed at 45 min: entity → repo → service → controller → DTO+mapper → validation → `@ControllerAdvice` exception handling → 2 slice tests. They ask for exactly this in L1.
 - Know cold: IoC/DI, bean scopes, bean lifecycle, `@Component` vs `@Bean`, autowiring modes and the `@Qualifier`/`@Primary` tiebreak, `@Transactional` propagation + why it silently no-ops on self-invocation and on private methods, auto-configuration (`@EnableAutoConfiguration` → `spring.factories`/`AutoConfiguration.imports`), starter dependencies, embedded server, actuator, profiles, `@ConfigurationProperties` vs `@Value`.
 - **The reported question**: *"How does a REST URL find which method to call?"* → `DispatcherServlet` → `HandlerMapping` (`RequestMappingHandlerMapping`) → `HandlerAdapter` → your method → `HttpMessageConverter` → response. Draw it.
@@ -57,7 +61,9 @@ Full hour-by-hour breakdown in **[DAY1-JAVA.md](DAY1-JAVA.md)**. Headline: build
 - Spring: `@KafkaListener`, `KafkaTemplate`, `ConcurrentKafkaListenerContainerFactory`.
 
 ### Day 5 — Wed 23 Sep · **DSA coding-test simulation**
-Timed, out loud, no IDE autocomplete. Use the dojo. Order: rotated-array search → longest substring → merge intervals → LRU → max-subarray-sum-k → string compression. Then SQL joins/group-by/window basics, and JPA `@Query` + N+1 problem.
+📄 **All 31 Allstate-tagged LeetCode problems, with links and a tiered study order: [leetcode/ALLSTATE-LEETCODE.md](leetcode/ALLSTATE-LEETCODE.md)**
+
+Timed, out loud, no IDE autocomplete. Start with the dojo problems (you've built them, so this is recall): rotated-array search → longest substring → merge intervals → LRU → max-subarray-sum-k → string compression. Then work the tiered list. Finish with SQL — joins, group-by, window functions, Nth-highest-salary, and **BCNF** (reported by name) — from [cheatsheets/03-java-study-guide.md § 7](cheatsheets/03-java-study-guide.md).
 
 ### Day 6 — Thu 24 Sep · **Projects, STAR stories, system design of your own work**
 - Draw your current architecture on one page. Every box: why it exists, what you'd change, what broke once.

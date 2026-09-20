@@ -1,51 +1,246 @@
 package com.allstate.prep.ds;
 
 /**
- * Build a HashMap from scratch. This is the single highest-leverage exercise
- * for Allstate's L1 round, because "How does HashMap work internally?" and
- * "How does HashSet work?" are the most-reported questions in the bank.
+ * Build a HashMap by hand. Walkthrough: see GUIDED-HASHMAP.md
  *
- * Implementing it once means you can answer from memory of the mechanism
- * rather than from a memorised paragraph — that is the difference the
- * interviewers explicitly say they screen for.
+ * WHY THIS ONE MATTERS MOST: "How does HashMap work internally?" is the single
+ * most-reported question in Allstate's Java rounds, and they screen for the
+ * MECHANISM, not a memorised paragraph. Build it once and you can never be
+ * caught out on it.
  *
- * Must-say facts once you've built it:
- *   - Default capacity 16, load factor 0.75, resize doubles and rehashes
- *   - Java 8+: bucket becomes a red-black tree at TREEIFY_THRESHOLD = 8
- *     (and untreeifies at 6), so worst case is O(log n), not O(n)
- *   - hash spreading: (h = key.hashCode()) ^ (h >>> 16) mixes high bits down
- *     because index = hash & (capacity - 1) only looks at the low bits
- *   - HashSet is literally a HashMap<E, Object> with a shared PRESENT sentinel
+ * ────────────────────────────────────────────────────────────────────────────
+ * THE IDEA, IN PLAIN ENGLISH
+ * ────────────────────────────────────────────────────────────────────────────
+ * A HashMap is just an ARRAY OF LINKED LISTS.
+ *
+ *   table[0] -> null
+ *   table[1] -> ("Aa"=1) -> ("BB"=2) -> null     <-- 2 keys collided here
+ *   table[2] -> ("cat"=9) -> null
+ *   table[3] -> null
+ *
+ * To store a key:  turn the key into a number (hashCode), squash that number
+ * into a slot index, and hang the entry off that slot. If something's already
+ * there (a "collision"), add it to that slot's chain.
+ * To find a key:   same two steps, then walk that one short chain.
+ *
+ * That's it. Array + chains. Everything else is bookkeeping.
+ * ────────────────────────────────────────────────────────────────────────────
+ *
+ * GOOD NEWS: all the fiddly parts are already written for you below —
+ * the Node class, the fields, hash(), indexFor(), keysEqual(), findNode()
+ * and resize(). READ them (the comments are your interview answers).
+ *
+ * YOU WRITE 4 METHODS, in this order:
+ *      TODO 1  get(key)          ~1 line   ← start here, it's nearly free
+ *      TODO 2  containsKey(key)  ~1 line
+ *      TODO 3  put(key, value)   the real exercise
+ *      TODO 4  remove(key)       similar to put, plus unlinking
+ *
+ * Run only this class's tests, after every change:
+ *      ./mvnw -q test -Dtest=MyHashMapTest
  */
 public class MyHashMap<K, V> {
 
+    // ── Tuning constants. Memorise these two numbers; they get asked. ──────
+    private static final int DEFAULT_CAPACITY = 16;    // real HashMap's default
+    private static final float LOAD_FACTOR = 0.75f;    // resize at 75% full
+
+    /**
+     * One entry in the map. `next` is what makes each slot a chain,
+     * which is how collisions are survived.
+     */
+    private static final class Node<K, V> {
+        final int hash;       // cached so we can compare cheaply before equals()
+        final K key;
+        V value;              // not final: put() overwrites it
+        Node<K, V> next;      // the rest of this slot's chain
+
+        Node(int hash, K key, V value, Node<K, V> next) {
+            this.hash = hash;
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+    }
+
+    private Node<K, V>[] table;   // the bucket array
+    private int size;             // how many entries total
+    private int threshold;        // resize once size passes this
+
+    @SuppressWarnings("unchecked")
     public MyHashMap() {
-        throw new UnsupportedOperationException("TDD: write the test first, then build me.");
+        this.table = new Node[DEFAULT_CAPACITY];
+        this.threshold = (int) (DEFAULT_CAPACITY * LOAD_FACTOR);   // 16 * 0.75 = 12
     }
 
-    /** @return the previous value for this key, or null if none. */
-    public V put(K key, V value) {
-        throw new UnsupportedOperationException("not implemented");
+    // ══════════════════════════════════════════════════════════════════════
+    //  HELPERS — already written. Read them; don't change them.
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Turn a key into a well-spread non-negative number.
+     *
+     * The `h ^ (h >>> 16)` is the bit worth quoting in an interview: indexFor()
+     * below only looks at the LOW bits of the hash, so two keys differing only
+     * in their HIGH bits would collide. XOR-ing the high 16 bits down onto the
+     * low ones mixes that information in. Real HashMap does exactly this.
+     */
+    private int hash(Object key) {
+        if (key == null) return 0;                 // null always goes in slot 0
+        int h = key.hashCode();
+        return (h ^ (h >>> 16)) & 0x7fffffff;      // mask off the sign bit
     }
 
+    /**
+     * Which slot does this hash belong in?
+     *
+     * `hash & (capacity - 1)` is a fast modulo that ONLY works because capacity
+     * is always a power of two. With capacity 16, that's `hash & 15`, keeping
+     * the low 4 bits => a number 0..15. That's why capacity is never 10 or 100.
+     */
+    private static int indexFor(int hash, int capacity) {
+        return hash & (capacity - 1);
+    }
+
+    /** Compare keys the correct way: null-safe, and equals() rather than ==. */
+    private static boolean keysEqual(Object a, Object b) {
+        return a == b || (a != null && a.equals(b));
+    }
+
+    /**
+     * Find the Node for a key, or null. This is the lookup half of the map:
+     * hash the key, jump to its slot, then walk that slot's short chain.
+     */
+    private Node<K, V> findNode(K key) {
+        int h = hash(key);
+        for (Node<K, V> n = table[indexFor(h, table.length)]; n != null; n = n.next) {
+            if (n.hash == h && keysEqual(n.key, key)) return n;
+        }
+        return null;
+    }
+
+    /**
+     * Grow the table when it gets too full, so chains stay short.
+     *
+     * Already written for you, but READ IT — "what happens when a HashMap gets
+     * full?" is a standard follow-up. Double the capacity, then re-place every
+     * existing node, because a node's slot depends on capacity and capacity
+     * just changed.
+     *
+     * Without this, chains grow without limit and lookups degrade to O(n).
+     * With it, lookups stay O(1) on average — that's the whole reason 0.75 exists.
+     */
+    @SuppressWarnings("unchecked")
+    private void resize() {
+        Node<K, V>[] old = table;
+        int newCapacity = old.length * 2;
+        Node<K, V>[] bigger = new Node[newCapacity];
+
+        for (Node<K, V> head : old) {              // every old slot
+            Node<K, V> n = head;
+            while (n != null) {                    // every node in its chain
+                Node<K, V> next = n.next;          // remember where we were
+                int i = indexFor(n.hash, newCapacity);
+                n.next = bigger[i];                // move it to the new table
+                bigger[i] = n;
+                n = next;
+            }
+        }
+        this.table = bigger;
+        this.threshold = (int) (newCapacity * LOAD_FACTOR);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  ALREADY DONE — trivial accessors
+    // ══════════════════════════════════════════════════════════════════════
+
+    public int size() { return size; }
+
+    /** Exposed so your tests can prove resize() actually fired. */
+    public int capacity() { return table.length; }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  YOUR WORK STARTS HERE
+    // ══════════════════════════════════════════════════════════════════════
+
+    /**
+     * TODO 1 — START HERE. Roughly one line.
+     *
+     * Return the value for this key, or null if the key isn't present.
+     * HINT: findNode(key) does all the work. You just need to handle the
+     *       null case and return .value otherwise.
+     *
+     * Makes these tests pass: putThenGet, absentKeyIsNull
+     */
     public V get(K key) {
-        throw new UnsupportedOperationException("not implemented");
+        throw new UnsupportedOperationException("TODO 1: use findNode(key)");
     }
 
-    public V remove(K key) {
-        throw new UnsupportedOperationException("not implemented");
-    }
-
+    /**
+     * TODO 2 — one line.
+     *
+     * Is this key present? Note this must be TRUE even when the stored value
+     * is null, which is exactly why containsKey exists separately from get.
+     * HINT: findNode again.
+     *
+     * Makes this test pass: containsKeyDistinguishesNullValueFromAbsent
+     */
     public boolean containsKey(K key) {
-        throw new UnsupportedOperationException("not implemented");
+        throw new UnsupportedOperationException("TODO 2: use findNode(key)");
     }
 
-    public int size() {
-        throw new UnsupportedOperationException("not implemented");
+    /**
+     * TODO 3 — THE MAIN EXERCISE.
+     *
+     * Store key -> value. Return the PREVIOUS value for that key, or null if
+     * the key is new.
+     *
+     * Work through it in these five steps:
+     *
+     *   1. int h = hash(key);
+     *      int i = indexFor(h, table.length);
+     *
+     *   2. Walk the chain at table[i] looking for this key.
+     *      If you find it: save the old value, overwrite n.value,
+     *      return the old value.
+     *      ⚠️ Do NOT change `size` here — an overwrite is not a new entry.
+     *      (The test `putReturnsPreviousValueAndOverwrites` checks this.)
+     *
+     *   3. Not found, so it's a new entry. Make a node and put it at the FRONT
+     *      of the chain — prepending is O(1), no need to walk to the end:
+     *          table[i] = new Node<>(h, key, value, table[i]);
+     *
+     *   4. size++;  then  if (size > threshold) resize();
+     *
+     *   5. return null;   // there was no previous value
+     *
+     * Makes these pass: putThenGet, putReturnsPreviousValueAndOverwrites,
+     * handlesCollidingKeys, supportsNullKeyLikeRealHashMap,
+     * resizesPastTheLoadFactorAndKeepsEveryEntry
+     */
+    public V put(K key, V value) {
+        throw new UnsupportedOperationException("TODO 3: see the 5 steps above");
     }
 
-    /** Expose this for your own tests: proves resize actually happened. */
-    public int capacity() {
-        throw new UnsupportedOperationException("not implemented");
+    /**
+     * TODO 4 — like put, but you unlink instead of insert.
+     *
+     * Remove the key. Return its value, or null if it wasn't there.
+     *
+     *   1. Hash and index, same as put.
+     *   2. Walk the chain, but keep a `prev` pointer as you go.
+     *   3. On a match, splice the node out:
+     *        - if prev == null it was the chain HEAD  -> table[i] = n.next;
+     *        - otherwise                              -> prev.next = n.next;
+     *   4. size--; and return n.value;
+     *   5. Never found it -> return null;
+     *
+     * ⚠️ Getting the `prev == null` case wrong is the classic bug: you drop the
+     * whole chain and silently lose the other keys in that slot.
+     *
+     * Makes this pass: removeReturnsOldValueAndShrinks
+     */
+    public V remove(K key) {
+        throw new UnsupportedOperationException("TODO 4: unlink, minding the head case");
     }
 }

@@ -19,11 +19,26 @@ dependencies; after that it's seconds.
 
 Green (no output) means the dojo works. Then open **[DAY1-JAVA.md](DAY1-JAVA.md)** and work the blocks.
 
+### Setup & plan
 - **[SETUP.md](SETUP.md)** — install Java, run your first test, IDE setup, troubleshooting
 - **[PLAN.md](PLAN.md)** — the 7-day plan and the real 6-round Allstate pipeline
-- **[DAY1-JAVA.md](DAY1-JAVA.md)** — today, block by block
-- **[cheatsheets/01-core-java-qbank.md](cheatsheets/01-core-java-qbank.md)** — reported questions, answered at interview depth
-- **[cheatsheets/02-java8-and-modern.md](cheatsheets/02-java8-and-modern.md)** — streams, lambdas, Optional, records
+
+### Day by day
+- **[DAY1-JAVA.md](DAY1-JAVA.md)** — Day 1: core Java, block by block
+- **[DAY2-SPRINGBOOT.md](DAY2-SPRINGBOOT.md)** — Day 2: Spring Boot, with a timed REST-API build
+
+### Learn TDD from zero (start here if the exercises feel opaque)
+- **[GUIDED-TDD.md](GUIDED-TDD.md)** — what TDD is, with the first 3 cycles typed out for you
+- **[GUIDED-HASHMAP.md](GUIDED-HASHMAP.md)** — build a HashMap, 4 guided methods
+
+### Study material
+- **[cheatsheets/01-core-java-qbank.md](cheatsheets/01-core-java-qbank.md)** — questions reported *verbatim* from Allstate, answered at interview depth
+- **[cheatsheets/02-java8-and-modern.md](cheatsheets/02-java8-and-modern.md)** — streams, lambdas, `Optional`, records
+- **[cheatsheets/03-java-study-guide.md](cheatsheets/03-java-study-guide.md)** — the rest of the Java syllabus: OOP, SOLID, patterns, exceptions, **JVM memory & GC**, **thread synchronization**, generics, **SQL/BCNF**, CI/CD
+- **[cheatsheets/04-spring-boot-qbank.md](cheatsheets/04-spring-boot-qbank.md)** — Spring Boot: DI, auto-config, REST, `@Transactional`, JPA, testing, Kafka
+
+### Problems
+- **[leetcode/ALLSTATE-LEETCODE.md](leetcode/ALLSTATE-LEETCODE.md)** — **all 31 Allstate-tagged LeetCode problems** with links, difficulty, frequency and a tiered order
 - **[reference-solutions/](reference-solutions/)** — verified solutions, `.java.txt` so you can't peek by accident
 
 ## Commands

@@ -32,6 +32,11 @@ Green? Good. Now look at what's here:
 This is Allstate's signature technical exercise, reported almost verbatim by candidates:
 *"implement the functionality of Set without using any collections, and the interviewer will do the TDD and ask questions about how to implement and pass the test cases."*
 
+> ### 🆕 Never done TDD, or not sure what the first step is?
+> **Read [GUIDED-TDD.md](GUIDED-TDD.md) first.** It walks you through the first three
+> red→green cycles with the exact code to paste, the exact error you should see, and why.
+> 10 minutes, and then this block makes sense.
+
 **Do it the interview way.** Open `TddDrillTest.java`, delete the `@Disabled`, and run this on a loop in a second terminal:
 
 ```bash
@@ -69,7 +74,32 @@ Then, and only then:
 - "Next I'm worried about hash collisions — `Aa` and `BB` collide in Java, let me test that."
 - "Average O(1), worst case O(n) per bucket unless I treeify like Java 8 does."
 
-If you finish early, do `MyHashMap` the same way (`-Dtest=MyHashMapTest`). It's the same machine with values attached — and it makes *"how does HashMap work internally?"*, the most-reported Allstate question, unmissable.
+### Then: `MyHashMap` — now fully guided
+
+Follow **[GUIDED-HASHMAP.md](GUIDED-HASHMAP.md)**.
+
+I've rewritten this one to be much gentler after your feedback. The fiddly parts — the
+`Node` class, the fields, `hash()`, `indexFor()`, `findNode()` and `resize()` — are **already
+written for you, with comments that double as your interview answers**. You implement just
+four methods, in increasing difficulty:
+
+| | Method | Effort |
+|---|---|---|
+| TODO 1 | `get()` | ~1 line — start here |
+| TODO 2 | `containsKey()` | ~1 line |
+| TODO 3 | `put()` | the real exercise, broken into 5 numbered steps |
+| TODO 4 | `remove()` | like put, plus unlinking |
+
+```bash
+./mvnw -q test -Dtest=MyHashMapTest
+```
+
+I verified that following those four TODOs exactly as written makes all 8 tests pass, so if
+you're stuck it's a detail, not a missing instruction.
+
+This is the highest-leverage item in the whole repo: *"how does HashMap work internally?"* is
+the most-reported Allstate Java question, and building it once means you answer from the
+mechanism instead of from memory.
 
 ---
 
@@ -128,7 +158,14 @@ Priority order by reported frequency:
 3. `mergeIntervals`, `maxSubArrayLen`, `compress` — all on the Allstate LeetCode tag list
 4. `reverseWords`, `firstUniqueChar`, `twoSum`, `rotate` — warm-ups
 
-Allstate's LeetCode tag has **31 problems: 8 easy / 16 medium / 7 hard**, weighted toward **arrays and strings**. There is no reward here for grinding graph or DP problems.
+Allstate's LeetCode tag has **31 problems: 8 easy / 16 medium / 7 hard**, weighted toward
+**arrays, strings and hash tables**. The full list with links is in
+**[leetcode/ALLSTATE-LEETCODE.md](leetcode/ALLSTATE-LEETCODE.md)** — work it top-down by frequency.
+
+> **Correction to something I said earlier:** I claimed graphs and DP were wasted effort.
+> The actual tag list is broader than that — 4 tree problems, 3 linked list, 2 stack, 4 heap
+> and 2 DP. Arrays/strings still dominate the top, but don't assume the tail is empty.
+> Union Find (1 problem) is the only thing genuinely safe to skip.
 
 ---
 
